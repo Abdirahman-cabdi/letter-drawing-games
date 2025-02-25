@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Letter Drawing Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      max-width: 650px;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    #targetBoard {
+      border: 2px dashed #666;
+      margin: 10px auto;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      color: #333;
+    }
+    canvas {
+      border: 2px solid #333;
+      cursor: crosshair;
+      margin: 10px 0;
+      background-color: #fff;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #donateBtn {
+      background-color: #0070ba;
+      color: white;
+      border: none;
+    }
+    #instruction, #result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Letter Drawing Game</h1>
+    <p id="instruction">Try to draw the target letter as accurately as you can.</p>
+    <div id="targetBoard">A</div>
+    <canvas id="drawingCanvas" width="500" height="400"></canvas>
+    <div>
+      <button id="submitBtn">Submit Drawing</button>
+      <button id="clearBtn">Clear Canvas</button>
+    </div>
+    <div id="result"></div>
+    <div>
+      <button id="donateBtn">Donate 50p via PayPal</button>
+    </div>
+  </div>
+
+  <script>
+    // Setup canvas and drawing context
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let drawnPoints = [];
+
+    // Array of target letters A-Z
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let targetLetter = "";
+
+    // Choose a random target letter and display it
+    function chooseTargetLetter() {
+      targetLetter = letters[Math.floor(Math.random() * letters.length)];
+      document.getElementById('targetBoard').textContent = targetLetter;
+    }
+    chooseTargetLetter();
+
+    // Function to get mouse or touch position relative to the canvas
+    function getPosition(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      return { x, y };
+    }
+
+    // Mouse events for drawing on the canvas
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      drawnPoints = []; // Reset the drawn points for the round
+      const { x, y } = getPosition(e);
+      drawnPoints.push({ x, y });
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const { x, y } = getPosition(e);
+      drawnPoints.push({ x, y });
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      drawing = false;
+    });
+
+    // Touch events for drawing on the canvas
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevent default touch behavior
+      drawing = true;
+      drawnPoints = []; // Reset the drawn points for the round
+      const { x, y } = getPosition(e.touches[0]);
+      drawnPoints.push({ x, y });
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // Prevent default touch behavior
+      if (!drawing) return;
+      const { x, y } = getPosition(e.touches[0]);
+      drawnPoints.push({ x, y });
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('touchend', () => {
+      drawing = false;
+    });
+
+    canvas.addEventListener('touchcancel', () => {
+      drawing = false;
+    });
+
+    // Clear canvas function
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawnPoints = [];
+      document.getElementById('result').textContent = "";
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+
+    // Placeholder evaluation function for letter drawing.
+    // In production, replace with a proper letter recognition algorithm.
+    function evaluateLetter(points, target) {
+      // For demo purposes: if the user has drawn more than 30 points, assume an attempt was made.
+      return points.length > 30;
+    }
+
+    // On submit, evaluate the drawing
+    document.getElementById('submitBtn').addEventListener('click', () => {
+      const resultDiv = document.getElementById('result');
+      let success = evaluateLetter(drawnPoints, targetLetter);
+
+      if (success) {
+        resultDiv.textContent = "Great job! Your drawing resembles the letter " + targetLetter + ".";
+      } else {
+        resultDiv.textContent = "That didn’t quite match the letter " + targetLetter + ".";
+      }
+
+      // Clear canvas and choose a new target letter after a brief delay
+      setTimeout(() => {
+        clearCanvas();
+        chooseTargetLetter();
+      }, 1500);
+    });
+
+    // PayPal donation button functionality
+    document.getElementById('donateBtn').addEventListener('click', () => {
+      window.open('https://www.paypal.com/donate?business=abdicabdi10@gmail.com&amount=0.50', '_blank');
+    });
+  </script>
+</body>
+</html>
